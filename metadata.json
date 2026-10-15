@@ -1,0 +1,6 @@
+{
+  "name": "IdeaSprout AI",
+  "description": "Transform messy, unformed brain dumps into structured product concepts, PRDs, blueprints, and cinematic video concepts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
