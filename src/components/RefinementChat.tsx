@@ -4,7 +4,7 @@ import { Send, Sparkles, MessageSquare, Bot, User, Loader2 } from 'lucide-react'
 
 interface RefinementChatProps {
   sprout: SproutResult;
-  currentUser?: UserProfile;
+  currentUser?: UserProfile | null;
 }
 
 interface ChatMessage {

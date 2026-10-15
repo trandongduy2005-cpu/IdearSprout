@@ -24,7 +24,7 @@ interface IncubatorInputProps {
   uiLanguage: UILanguage;
   defaultAiLanguage: string;
   onOpenLanguageModal: () => void;
-  currentUser: UserProfile;
+  currentUser: UserProfile | null;
   onOpenAuthModal: () => void;
 }
 
@@ -46,7 +46,7 @@ export const IncubatorInput: React.FC<IncubatorInputProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const recognitionRef = useRef<any>(null);
 
-  const isAuthenticated = currentUser.isAuthenticated && currentUser.provider !== 'guest';
+  const isAuthenticated = Boolean(currentUser && currentUser.isAuthenticated && currentUser.provider !== 'guest');
 
   // Sync default AI language if parent changes it
   useEffect(() => {
@@ -186,7 +186,7 @@ export const IncubatorInput: React.FC<IncubatorInputProps> = ({
               <span>{t.incubatorTitle}</span>
             </div>
 
-            {isAuthenticated ? (
+            {isAuthenticated && currentUser ? (
               <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-[11px] font-semibold">
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
                 <span>Verified: {currentUser.name} ({currentUser.provider === 'google' ? 'Google' : 'Facebook'})</span>

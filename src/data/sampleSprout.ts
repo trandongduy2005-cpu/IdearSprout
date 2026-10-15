@@ -4,10 +4,10 @@ export const SAMPLE_SPROUT: SproutResult = {
   id: 'sprout_sample_plantcare',
   createdAt: new Date().toISOString(),
   rawInput: 'Ứng dụng AI chụp ảnh lá cây cảnh nhận diện sâu bệnh và hướng dẫn chăm sóc bằng tiếng Việt',
-  greeting: "Chào mừng Đông Duy! Hãy cùng ươm mầm ý tưởng của bạn: Mầm Xanh AI (SproutMate)",
-  userName: 'Đông Duy',
-  userEmail: 'trandongduy2005@gmail.com',
-  authProvider: 'google',
+  greeting: "Chào mừng bạn! Hãy cùng ươm mầm ý tưởng của bạn: Mầm Xanh AI (SproutMate)",
+  userName: undefined,
+  userEmail: undefined,
+  authProvider: undefined,
   languageDetected: 'Vietnamese',
   productName: 'Mầm Xanh AI (SproutMate)',
   tagline: 'Bác sĩ cây cảnh bỏ túi – Nuôi dưỡng không gian xanh bằng thị giác AI thông minh',
@@ -180,7 +180,7 @@ export const SAMPLE_SPROUT: SproutResult = {
     ],
     videoGenerationPrompt: 'Cinematic 8k commercial video. Morning golden hour soft sunlight entering a modern minimalist urban balcony apartment in Saigon. A stylish 25-year-old Vietnamese professional holds a sleek smartphone, scanning a potted Monstera plant. Soft green luminous AR contour lines gently scan across the plant leaves. Macro close-up on fresh morning dew on vibrant green botanical leaves. Shallow depth of field, 35mm anamorphic lens, warm Kodachrome color grade, gentle atmospheric dust motes, peaceful uplifting mood, photorealistic texture.',
   },
-  formattedMarkdown: `Greeting: "Chào mừng Đông Duy! Hãy cùng ươm mầm ý tưởng của bạn: Mầm Xanh AI (SproutMate)"
+  formattedMarkdown: `Greeting: "Chào mừng bạn! Hãy cùng ươm mầm ý tưởng của bạn: Mầm Xanh AI (SproutMate)"
 
 ---
 ## 1. 🌿 Idea Overview (Tổng quan Ý tưởng)

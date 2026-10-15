@@ -4,7 +4,7 @@ import { UILanguage, TRANSLATIONS } from '../i18n/translations';
 import { Sprout, BookMarked, Sparkles, User, PlusCircle, Globe } from 'lucide-react';
 
 interface HeaderProps {
-  currentUser: UserProfile;
+  currentUser: UserProfile | null;
   savedCount: number;
   currentUiLanguage: UILanguage;
   onOpenLanguage: () => void;
@@ -104,10 +104,10 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={onOpenAuth}
             className="flex items-center gap-2 p-1.5 sm:px-3 sm:py-1.5 rounded-xl border border-emerald-100 hover:border-emerald-300 bg-white hover:bg-emerald-50/30 transition-all shadow-2xs"
           >
-            {currentUser.isAuthenticated && currentUser.provider !== 'guest' ? (
+            {currentUser && currentUser.isAuthenticated ? (
               <>
                 <img
-                  src={currentUser.avatar}
+                  src={currentUser.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80'}
                   alt={currentUser.name}
                   className="w-7 h-7 sm:w-8 sm:h-8 rounded-full object-cover ring-2 ring-emerald-300"
                 />
@@ -117,7 +117,7 @@ export const Header: React.FC<HeaderProps> = ({
                   </div>
                   <div className="text-[10px] text-emerald-600 font-semibold flex items-center gap-0.5">
                     <Sparkles className="w-2.5 h-2.5" />
-                    <span>Pro Seedling</span>
+                    <span>Verified Seedling</span>
                   </div>
                 </div>
               </>

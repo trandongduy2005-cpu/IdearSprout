@@ -9,6 +9,7 @@ import { GardenDrawer } from './components/GardenDrawer';
 import { OnePagerModal } from './components/OnePagerModal';
 import { LanguageModal } from './components/LanguageModal';
 import { UILanguage, TRANSLATIONS } from './i18n/translations';
+import { auth, onAuthStateChanged, logOutUser } from './firebase';
 import {
   Sprout,
   Sparkles,
@@ -21,10 +22,10 @@ import {
   Flame,
   AlertCircle,
   X,
+  Loader2,
 } from 'lucide-react';
 
 const LOCAL_STORAGE_KEY = 'ideasprout_sprouts_v1';
-const USER_STORAGE_KEY = 'ideasprout_user_v1';
 const UI_LANG_KEY = 'ideasprout_ui_lang_v1';
 const AI_LANG_KEY = 'ideasprout_ai_lang_v1';
 
@@ -51,24 +52,41 @@ export default function App() {
     return 'auto';
   });
 
-  const [currentUser, setCurrentUser] = useState<UserProfile>(() => {
-    try {
-      const saved = localStorage.getItem(USER_STORAGE_KEY);
-      if (saved) return JSON.parse(saved);
-    } catch {
-      // ignore
-    }
-    return {
-      id: 'usr_google_644053177555',
-      name: 'Đông Duy',
-      email: 'trandongduy2005@gmail.com',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80',
-      provider: 'google',
-      isAuthenticated: true,
-      isPro: true,
-      authToken: 'oauth_goog_live_session',
-    };
-  });
+  // REAL AUTHENTICATION ONLY: Initial state is strictly null
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
+
+  // Single Source of Truth: Listen strictly to Firebase onAuthStateChanged
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (firebaseUser) {
+        try {
+          const token = await firebaseUser.getIdToken();
+          const providerId = firebaseUser.providerData[0]?.providerId || 'google.com';
+          const isGoogle = providerId.includes('google');
+          setCurrentUser({
+            id: firebaseUser.uid,
+            name: firebaseUser.displayName || firebaseUser.email?.split('@')[0] || 'Google User',
+            email: firebaseUser.email || '',
+            avatar:
+              firebaseUser.photoURL ||
+              'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80',
+            provider: isGoogle ? 'google' : 'facebook',
+            isAuthenticated: true,
+            isPro: true,
+            authToken: token,
+          });
+        } catch (err) {
+          console.error('Error fetching Firebase auth token:', err);
+        }
+      } else {
+        setCurrentUser(null);
+      }
+      setIsAuthLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   const [sprouts, setSprouts] = useState<SproutResult[]>(() => {
     try {
@@ -93,7 +111,7 @@ export default function App() {
   const [isOnePagerOpen, setIsOnePagerOpen] = useState(false);
   const [isLanguageModalOpen, setIsLanguageModalOpen] = useState(false);
 
-  // Sync to localStorage
+  // Sync sprouts to localStorage
   useEffect(() => {
     try {
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(sprouts));
@@ -101,14 +119,6 @@ export default function App() {
       console.warn('LocalStorage save error:', e);
     }
   }, [sprouts]);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(currentUser));
-    } catch (e) {
-      console.warn('LocalStorage save error:', e);
-    }
-  }, [currentUser]);
 
   useEffect(() => {
     try {
@@ -128,16 +138,21 @@ export default function App() {
 
   const t = TRANSLATIONS[uiLanguage] || TRANSLATIONS.vi;
 
+  const handleLogout = async () => {
+    await logOutUser();
+    setCurrentUser(null);
+  };
+
   const handleCreateSprout = async (
     rawInput: string,
     intensity: string,
     language: string
   ) => {
     // STRICT AUTHENTICATION GUARD: Real Users Only
-    if (!currentUser.isAuthenticated || currentUser.provider === 'guest') {
+    if (!currentUser || !currentUser.isAuthenticated) {
       setIsAuthOpen(true);
       setErrorMessage(
-        'Cảnh báo truy cập: Bạn cần đăng nhập bằng tài khoản Google hoặc Facebook thực tế để sử dụng IdeaSprout.'
+        'Cảnh báo truy cập: Bạn cần đăng nhập bằng tài khoản Google thực tế để sử dụng IdeaSprout.'
       );
       return;
     }
@@ -196,6 +211,21 @@ export default function App() {
       setActiveSprout(null);
     }
   };
+
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-[#fafcf9] flex flex-col items-center justify-center p-4">
+        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 animate-bounce mb-4">
+          <Sprout className="w-8 h-8 text-white" />
+        </div>
+        <h2 className="text-lg font-black text-stone-800 tracking-tight">IdeaSprout AI</h2>
+        <div className="flex items-center gap-2 mt-2 text-xs text-stone-500">
+          <Loader2 className="w-3.5 h-3.5 text-emerald-600 animate-spin" />
+          <span>Đang kiểm tra phiên xác thực...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#fafcf9] text-stone-900 font-sans selection:bg-emerald-500/20 selection:text-emerald-950 flex flex-col">
@@ -420,18 +450,8 @@ export default function App() {
         isOpen={isAuthOpen}
         onClose={() => setIsAuthOpen(false)}
         currentUser={currentUser}
-        onLogin={(usr) => setCurrentUser(usr)}
-        onLogout={() =>
-          setCurrentUser({
-            id: 'usr_guest',
-            name: 'Guest',
-            email: '',
-            avatar: '',
-            provider: 'guest',
-            isAuthenticated: false,
-            isPro: false,
-          })
-        }
+        onLogout={handleLogout}
+        onLoginSuccess={(usr) => setCurrentUser(usr)}
       />
 
       <GardenDrawer

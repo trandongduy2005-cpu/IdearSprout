@@ -31,7 +31,7 @@ import { UserProfile } from '../types';
 interface SproutViewProps {
   sprout: SproutResult;
   uiLanguage?: UILanguage;
-  currentUser?: UserProfile;
+  currentUser?: UserProfile | null;
   onToggleFavorite: (id: string) => void;
   onOpenOnePager: () => void;
   onNewSprout: () => void;
