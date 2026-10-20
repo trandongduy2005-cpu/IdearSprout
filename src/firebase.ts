@@ -16,24 +16,23 @@ export interface FirebaseConfig {
   storageBucket?: string;
   messagingSenderId?: string;
   appId?: string;
+  measurementId?: string;
 }
 
 const STORAGE_CONFIG_KEY = 'ideasprout_firebase_config_v2';
 
 /**
  * ĐOẠN MÃ CẤU HÌNH FIREBASE CHÍNH THỨC (FIREBASE CONFIG OBJECT)
- * Bạn có thể:
- * 1. Dán trực tiếp thông tin dự án thực tế từ Firebase Console vào đối tượng bên dưới
- * 2. Hoặc thiết lập qua file .env (VITE_FIREBASE_API_KEY, VITE_FIREBASE_PROJECT_ID, ...)
- * 3. Hoặc dán trực tiếp trên giao diện ứng dụng (Modal Đăng nhập > Cấu hình Firebase)
+ * Khởi tạo từ dự án idear-e3801 trên Firebase Console
  */
 export const firebaseConfig: FirebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || '',
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || '',
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || '',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyCeESI66Rq-SLsRfQJt1gCPbVHvV7rDU6c",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "idear-e3801.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "idear-e3801",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "idear-e3801.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "734297339555",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:734297339555:web:14c9167545693f92b97116",
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-7PJP06LVS7",
 };
 
 /**
@@ -78,6 +77,7 @@ export const correctAndSanitizeConfig = (raw: Partial<FirebaseConfig>): Firebase
   let storageBucket = sanitizeConfigValue(raw.storageBucket);
   let messagingSenderId = sanitizeConfigValue(raw.messagingSenderId);
   let appId = sanitizeConfigValue(raw.appId);
+  let measurementId = sanitizeConfigValue(raw.measurementId);
 
   // Check 1: Did user swap apiKey and projectId?
   // (e.g. apiKey="ideasprout-app", projectId="AIzaSy...")
@@ -110,17 +110,24 @@ export const correctAndSanitizeConfig = (raw: Partial<FirebaseConfig>): Firebase
     storageBucket,
     messagingSenderId,
     appId,
+    measurementId,
   };
 };
 
 /**
  * Loads the effective Firebase configuration:
- * 1. Checks user-saved runtime config from localStorage
- * 2. Checks direct static firebaseConfig (if hardcoded by developer)
+ * 1. Checks direct static firebaseConfig (if hardcoded with real project by developer)
+ * 2. Checks user-saved runtime config from localStorage
  * 3. Falls back to Vite environment variables (VITE_FIREBASE_*)
  */
 export const loadEffectiveFirebaseConfig = (): FirebaseConfig => {
-  // 1. Try reading user custom config from localStorage (saved via UI)
+  // 1. Try static firebaseConfig if populated directly in source code
+  const directConfig = correctAndSanitizeConfig(firebaseConfig);
+  if (directConfig.apiKey && directConfig.projectId && isGoogleApiKeyFormat(directConfig.apiKey)) {
+    return directConfig;
+  }
+
+  // 2. Try reading user custom config from localStorage (saved via UI)
   if (typeof window !== 'undefined') {
     try {
       const stored = localStorage.getItem(STORAGE_CONFIG_KEY);
@@ -138,12 +145,6 @@ export const loadEffectiveFirebaseConfig = (): FirebaseConfig => {
     }
   }
 
-  // 2. Try static firebaseConfig if populated directly in source code
-  const directConfig = correctAndSanitizeConfig(firebaseConfig);
-  if (directConfig.apiKey && directConfig.projectId) {
-    return directConfig;
-  }
-
   // 3. Read from environment variables
   const envConfig: Partial<FirebaseConfig> = {
     apiKey: import.meta.env.VITE_FIREBASE_API_KEY || '',
@@ -152,6 +153,7 @@ export const loadEffectiveFirebaseConfig = (): FirebaseConfig => {
     storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || '',
     messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || '',
     appId: import.meta.env.VITE_FIREBASE_APP_ID || '',
+    measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || '',
   };
 
   const sanitizedEnv = correctAndSanitizeConfig(envConfig);
@@ -164,6 +166,7 @@ export const loadEffectiveFirebaseConfig = (): FirebaseConfig => {
     storageBucket: sanitizedEnv.storageBucket,
     messagingSenderId: sanitizedEnv.messagingSenderId,
     appId: sanitizedEnv.appId,
+    measurementId: sanitizedEnv.measurementId,
   };
 };
 
@@ -244,12 +247,13 @@ export const getFirebaseConfigStatus = (
 const initFirebaseInstances = (config: FirebaseConfig): { app: FirebaseApp; auth: Auth } => {
   // If no apiKey is set, provide a placeholder object to avoid crashing initializeApp on initial load
   const safeConfig = {
-    apiKey: config.apiKey || 'AIzaSyNotConfiguredPleaseProvideValidKey39',
-    authDomain: config.authDomain || 'ideasprout-app.firebaseapp.com',
-    projectId: config.projectId || 'ideasprout-app',
-    storageBucket: config.storageBucket || 'ideasprout-app.appspot.com',
-    messagingSenderId: config.messagingSenderId || '123456789012',
-    appId: config.appId || '1:123456789012:web:placeholderapp123456',
+    apiKey: config.apiKey || 'AIzaSyCeESI66Rq-SLsRfQJt1gCPbVHvV7rDU6c',
+    authDomain: config.authDomain || 'idear-e3801.firebaseapp.com',
+    projectId: config.projectId || 'idear-e3801',
+    storageBucket: config.storageBucket || 'idear-e3801.firebasestorage.app',
+    messagingSenderId: config.messagingSenderId || '734297339555',
+    appId: config.appId || '1:734297339555:web:14c9167545693f92b97116',
+    ...(config.measurementId ? { measurementId: config.measurementId } : {}),
   };
 
   const existingApps = getApps();
@@ -318,6 +322,7 @@ export const parseAndSaveFirebaseSnippet = (snippet: string): { success: boolean
       const storageBucketMatch = cleaned.match(/storageBucket\s*:\s*["']([^"']+)["']/i);
       const messagingSenderIdMatch = cleaned.match(/messagingSenderId\s*:\s*["']([^"']+)["']/i);
       const appIdMatch = cleaned.match(/appId\s*:\s*["']([^"']+)["']/i);
+      const measurementIdMatch = cleaned.match(/measurementId\s*:\s*["']([^"']+)["']/i);
 
       if (apiKeyMatch || projectIdMatch) {
         parsedObj = {
@@ -327,6 +332,7 @@ export const parseAndSaveFirebaseSnippet = (snippet: string): { success: boolean
           storageBucket: storageBucketMatch ? storageBucketMatch[1] : '',
           messagingSenderId: messagingSenderIdMatch ? messagingSenderIdMatch[1] : '',
           appId: appIdMatch ? appIdMatch[1] : '',
+          measurementId: measurementIdMatch ? measurementIdMatch[1] : '',
         };
       }
     }
